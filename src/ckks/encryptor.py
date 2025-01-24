@@ -1,5 +1,6 @@
 from enum import Enum
 
+import torch
 import numpy as np
 import tenseal as ts
 
@@ -27,11 +28,20 @@ class PredefinedConfigs(Enum):
 
 
 class Encryptor:
-    def __init__(self, config: PredefinedConfigs = None, windows_nb: int = 121):
-        if config is None:
-            config = PredefinedConfigs.HIGH_DEPTH
+    def __init__(
+        self,
+        config: PredefinedConfigs = None,
+        windows_nb: int = 121,
+        context: ts.Context | None = None,
+    ):
+        if context:
+            self.context = context
+        else:
+            if config is None:
+                config = PredefinedConfigs.HIGH_DEPTH
 
-        self.context = self.create_ckks_context(**config.value)
+            self.context = self.create_ckks_context(**config.value)
+
         self.windows_nb = windows_nb
 
     @classmethod
@@ -53,16 +63,37 @@ class Encryptor:
 
         return context
 
-    def encrypt(self, data: np.ndarray) -> ts.CKKSVector:
-        assert self.context.has_secret_key()
+    def encrypt_image(self, data: np.ndarray | torch.Tensor) -> ts.CKKSVector:
+        assert self.has_secret_key()
         data_enc, windows_nb = ts.im2col_encoding(
             self.context, data.squeeze().tolist(), 7, 7, 2
         )
         assert windows_nb == self.windows_nb
-        print()
         return data_enc
 
     def decrypt(self, enc_data: ts.CKKSVector) -> np.ndarray:
-        assert self.context.has_secret_key()
+        assert self.has_secret_key()
         data = enc_data.decrypt(self.context.secret_key())
         return np.array(data)
+
+    def has_secret_key(self):
+        return self.context.has_secret_key()
+
+    def serialize(self) -> dict:
+        return {
+            "context": self.context.serialize(save_secret_key=False),
+            "windows_nb": self.windows_nb,
+        }
+
+    @classmethod
+    def deserialize(cls, serialized_encryptor: dict) -> "Encryptor":
+        context = ts.context_from(serialized_encryptor["context"])
+        windows_nb = serialized_encryptor["windows_nb"]
+        return Encryptor(context=context, windows_nb=windows_nb)
+
+    def serialize_data(self, vec: ts.CKKSVector) -> bytes:
+        vec.link_context(self.context)
+        return vec.serialize()
+
+    def deserialize_data(self, serialized_vec: bytes) -> ts.CKKSVector:
+        return ts.ckks_vector_from(self.context, serialized_vec)
