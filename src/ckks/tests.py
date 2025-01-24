@@ -1,25 +1,24 @@
 import tqdm
 import torch
-import tenseal as ts
 
 from src.classifier import MnistClassifier
 from src.ckks.ckks_classifier import CkksCompatibleMnistClassifier
-from src.ckks.utils import create_ckks_context, encrypt_data, decrypt_data
+from src.ckks.encryptor import Encryptor
 
 
-def test_ckks_classifier(context: ts.Context):
+def test_ckks_classifier(encryptor: Encryptor):
     classifier = MnistClassifier()
     classifier.eval()
     enc_classifier = CkksCompatibleMnistClassifier(classifier, windows_nb=121)
 
-    batch_example = torch.randint(0, 255, (4, 1, 28, 28)) / 255.
+    batch_example = torch.randint(0, 255, (4, 1, 28, 28)) / 255.0
     for input_example in tqdm.tqdm(batch_example):
-        input_enc = encrypt_data(context, input_example)
+        input_enc = encryptor.encrypt(input_example)
         output_enc = enc_classifier(input_enc)
-        output = decrypt_data(context, output_enc)
+        output = encryptor.decrypt(output_enc)
         assert output.shape == (10,)
 
 
 if __name__ == "__main__":
-    context = create_ckks_context()
-    test_ckks_classifier(context)
+    encryptor = Encryptor()
+    test_ckks_classifier(encryptor)
