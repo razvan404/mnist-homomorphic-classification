@@ -1,7 +1,7 @@
 import torch
 import tenseal as ts
 
-from classifier import MnistClassifier
+from src.classifier import MnistClassifier
 
 
 class CkksCompatibleMnistClassifier:

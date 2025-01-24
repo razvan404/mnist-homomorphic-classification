@@ -2,9 +2,9 @@ import tqdm
 import torch
 import tenseal as ts
 
-from classifier import MnistClassifier
-from ckks.ckks_classifier import CkksCompatibleMnistClassifier
-from ckks.utils import create_ckks_context, encrypt_data, decrypt_data
+from src.classifier import MnistClassifier
+from src.ckks.ckks_classifier import CkksCompatibleMnistClassifier
+from src.ckks.utils import create_ckks_context, encrypt_data, decrypt_data
 
 
 def test_ckks_classifier(context: ts.Context):
