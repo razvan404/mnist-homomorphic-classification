@@ -8,3 +8,6 @@ scikit-learn~=1.6.1
 pygame~=2.6.1
 numpy~=2.2.2
 requests~=2.32.3
+uvicorn~=0.34.0
+fastapi~=0.115.7
+pydantic~=2.10.6
