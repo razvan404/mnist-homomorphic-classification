@@ -1,4 +1,5 @@
 from enum import Enum
+import base64
 
 import torch
 import numpy as np
@@ -79,21 +80,31 @@ class Encryptor:
     def has_secret_key(self):
         return self.context.has_secret_key()
 
+    @classmethod
+    def bytes_to_string(cls, byte_data: bytes) -> str:
+        return base64.b64encode(byte_data).decode("utf-8")
+
+    @classmethod
+    def string_to_bytes(cls, string_data: str) -> bytes:
+        return base64.b64decode(string_data.encode("utf-8"))
+
     def serialize(self) -> dict:
         return {
-            "context": self.context.serialize(save_secret_key=False),
+            "context": self.bytes_to_string(
+                self.context.serialize(save_secret_key=False)
+            ),
             "windows_nb": self.windows_nb,
         }
 
     @classmethod
     def deserialize(cls, serialized_encryptor: dict) -> "Encryptor":
-        context = ts.context_from(serialized_encryptor["context"])
+        context = ts.context_from(cls.string_to_bytes(serialized_encryptor["context"]))
         windows_nb = serialized_encryptor["windows_nb"]
         return Encryptor(context=context, windows_nb=windows_nb)
 
-    def serialize_data(self, vec: ts.CKKSVector) -> bytes:
+    def serialize_data(self, vec: ts.CKKSVector) -> str:
         vec.link_context(self.context)
-        return vec.serialize()
+        return self.bytes_to_string(vec.serialize())
 
-    def deserialize_data(self, serialized_vec: bytes) -> ts.CKKSVector:
-        return ts.ckks_vector_from(self.context, serialized_vec)
+    def deserialize_data(self, serialized_vec: str) -> ts.CKKSVector:
+        return ts.ckks_vector_from(self.context, self.string_to_bytes(serialized_vec))
