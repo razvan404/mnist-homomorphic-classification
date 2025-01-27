@@ -30,11 +30,6 @@ class InferenceResponse(BaseModel):
     preds: str
 
 
-def perform_inference(grid: str) -> (int, List[float]):
-    preds = [0.1] * 10
-    return preds
-
-
 @app.post("/inference", response_model=InferenceResponse)
 async def inference(request: InferenceRequest):
     try:
