@@ -45,25 +45,31 @@ This repository implements a **privacy-preserving client-server architecture** f
 #### 1. Encoding: Numbers → Polynomial
 - **Input**: Vector of real numbers $[z₁, z₂, ..., zₙ]$.
 - **Scaling**: Multiply by $\Delta$ (e.g., $\Delta = 2^{40}$) to preserve precision:
-  $$
-  \mathbf{z}_{\text{scaled}} = \Delta \cdot \mathbf{z}
-  $$
+
+$$
+\mathbf{z}_{\text{scaled}} = \Delta \cdot \mathbf{z}
+$$
+
 - **Canonical Embedding**: Map the scaled vector to a polynomial in the ring $R = \mathbb{Z}[x]/(x^N + 1)$:
-  $$
-  m(x) = \sigma^{-1}(\mathbf{z}_{\text{scaled}})
-  $$
-  where $\sigma^{-1}$ is the inverse canonical embedding (similar to inverse DFT).
+
+$$
+m(x) = \sigma^{-1}(\mathbf{z}_{\text{scaled}})
+$$
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;where $\sigma^{-1}$ is the inverse canonical embedding (similar to inverse DFT).
 
 #### 2. Encryption: Polynomial → Ciphertext
 - **Public Key**: $pk = (b, a)$, where $b = -a \cdot sk + e \ (\text{mod}\ q)$.  
 - **Encrypt** $m(x)$ into ciphertext $ct = (c₀, c₁)$:
-  $$
-  \begin{align*}
-  c₀ &= v \cdot b + m + e₀ \ (\text{mod}\ q), \\
-  c₁ &= v \cdot a + e₁ \ (\text{mod}\ q),
-  \end{align*}
-  $$
-  where $v$ is random, and $e₀, e₁$ are small noise polynomials.
+
+$$
+\begin{align*}
+c₀ &= v \cdot b + m + e₀ \ (\text{mod}\ q), \\
+c₁ &= v \cdot a + e₁ \ (\text{mod}\ q),
+\end{align*}
+$$
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;where $v$ is random, and $e₀, e₁$ are small noise polynomials.
 
 #### 3. Computation on Ciphertexts
 ##### Addition
@@ -72,10 +78,12 @@ ct_{\text{sum}} = (c₀ + d₀, \ c₁ + d₁) \ (\text{mod}\ q)
 $$
 
 ##### Multiplication
-1. Compute tensor product:  
-   $$
-   ct_{\text{mult}} = (c₀ \cdot d₀, \ c₀ \cdot d₁ + c₁ \cdot d₀, \ c₁ \cdot d₁) \ (\text{mod}\ q)
-   $$
+1. Compute tensor product:
+
+$$
+ct_{\text{mult}} = (c₀ \cdot d₀, \ c₀ \cdot d₁ + c₁ \cdot d₀, \ c₁ \cdot d₁) \ (\text{mod}\ q)
+$$
+
 2. **Relinearize** using $rlk$ to compress back to 2 components.
 
 ##### Rotation (Slot Shifting)
@@ -84,21 +92,24 @@ $$
 #### 4. Decryption: Ciphertext → Polynomial
 - **Secret Key**: $sk$ (small random polynomial).
 - Recover the (noisy) polynomial:
-  $$
-  m_{\text{decrypted}}(x) = c₀ + c₁ \cdot sk \ (\text{mod}\ q)
-  $$
+
+$$
+m_{\text{decrypted}}(x) = c₀ + c₁ \cdot sk \ (\text{mod}\ q)
+$$
 
 #### 5. Decoding: Polynomial → Numbers
-1. Apply canonical embedding:  
-   $$
-   \mathbf{z}_{\text{scaled}} = \sigma(m_{\text{decrypted}}(x))
-   $$
-2. Descale:  
-   $$
-   \mathbf{z}_{\text{result}} \approx \mathbf{z}_{\text{scaled}} / \Delta
-   $$
 
----
+1. Apply canonical embedding:
+
+$$
+\mathbf{z} = \sigma(m_{\text{decrypted}}(x))
+$$
+
+2. Descale:
+
+$$
+\mathbf{z}_{\text{result}} \approx \mathbf{z} / \Delta
+$$
 
 ### CKKS TenSeal Implementation
 #### 1. Context
@@ -123,7 +134,7 @@ It defines the degree of the polynomial ring $R = \mathbb{Z}[x]/(x^N + 1)$.
 
 ##### b) **`coeff_mod_bit_sizes`**
 It specifies the bit sizes of primes in the coefficient modulus chain $Q = q_1 \cdot q_2 \cdot \dots \cdot q_L$.  
-- **First Prime ($q_1$)**: Sets the scaling factor $\Delta \approx 2^{\text{bit_size}}$ (e.g., $60$ → $\Delta \approx 2^{60}$).  
+- **First Prime ($q_1$)**: Sets the scaling factor $\Delta \approx 2^{q_1}$ (e.g., $60$ → $\Delta \approx 2^{60}$).  
 - **Middle Primes ($q_2, q_3, ...$)**: Manage noise growth during multiplications.  
 - **Last Prime ($q_L$)**: Final modulus to control residual noise.  
 - **Multiplicative Depth**:  
