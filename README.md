@@ -43,7 +43,7 @@ This repository implements a **privacy-preserving client-server architecture** f
 ### Steps in CKKS
 
 #### 1. Encoding: Numbers → Polynomial
-- **Input**: Vector of real numbers $[z₁, z₂, ..., zₙ]$.
+- **Input**: Vector of real numbers $[z_1, z_2, ..., z_n]$.
 - **Scaling**: Multiply by $\Delta$ (e.g., $\Delta = 2^{40}$) to preserve precision:
 
 $$
@@ -60,41 +60,41 @@ $$
 
 #### 2. Encryption: Polynomial → Ciphertext
 - **Public Key**: $pk = (b, a)$, where $b = -a \cdot sk + e \ (\text{mod}\ q)$.  
-- **Encrypt** $m(x)$ into ciphertext $ct = (c₀, c₁)$:
+- **Encrypt** $m(x)$ into ciphertext $ct = (c_0, c_1)$:
 
 $$
 \begin{align*}
-c₀ &= v \cdot b + m + e₀ \ (\text{mod}\ q), \\
-c₁ &= v \cdot a + e₁ \ (\text{mod}\ q),
+c_0 &= v \cdot b + m + e_0 \ (\text{mod}\ q), \\
+c_1 &= v \cdot a + e_1 \ (\text{mod}\ q),
 \end{align*}
 $$
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;where $v$ is random, and $e₀, e₁$ are small noise polynomials.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;where $v$ is random, and $e_0, e_1$ are small noise polynomials.
 
 #### 3. Computation on Ciphertexts
 ##### Addition
 $$
-ct_{\text{sum}} = (c₀ + d₀, \ c₁ + d₁) \ (\text{mod}\ q)
+ct_{\text{sum}} = (c_0 + d_0, \ c_1 + d_1) \ (\text{mod}\ q)
 $$
 
 ##### Multiplication
 1. Compute tensor product:
 
 $$
-ct_{\text{mult}} = (c₀ \cdot d₀, \ c₀ \cdot d₁ + c₁ \cdot d₀, \ c₁ \cdot d₁) \ (\text{mod}\ q)
+ct_{\text{mult}} = (c_0 \cdot d_0, \ c_0 \cdot d_1 + c-1 \cdot d_0, \ c_1 \cdot d_1) \ (\text{mod}\ q)
 $$
 
 2. **Relinearize** using $rlk$ to compress back to 2 components.
 
 ##### Rotation (Slot Shifting)
-- Use **Galois keys** to rotate encoded slots (e.g., shift $[z₁, z₂, z₃]$ → $[z₃, z₁, z₂]$).
+- Use **Galois keys** to rotate encoded slots (e.g., shift $[z_1, z_2, z_3]$ → $[z_3, z_1, z_2]$).
 
 #### 4. Decryption: Ciphertext → Polynomial
 - **Secret Key**: $sk$ (small random polynomial).
 - Recover the (noisy) polynomial:
 
 $$
-m_{\text{decrypted}}(x) = c₀ + c₁ \cdot sk \ (\text{mod}\ q)
+m_{\text{decrypted}}(x) = c_0 + c_1 \cdot sk \ (\text{mod}\ q)
 $$
 
 #### 5. Decoding: Polynomial → Numbers
@@ -143,9 +143,9 @@ It specifies the bit sizes of primes in the coefficient modulus chain $Q = q_1 \
 - **Note**: Total bit size of $Q$ (sum of `coeff_mod_bit_sizes`) must align with `poly_modulus_degree` for security.  
 
 #### 2. Keys
-| Key                             | Purpose                                   | Mathematical Role                                                                      |
+| Key                             | Purpose                                   | Mathematical Role                         `                                             |
 |---------------------------------|-------------------------------------------|----------------------------------------------------------------------------------------|
-| **Secret Key** ($sk$)           | Decrypt ciphertexts                       | Small polynomial in $R = \mathbb{Z}[x]/(x^N + 1)$ used in $m = c₀ + c₁ \cdot sk$.      |
+| **Secret Key** ($sk$)           | Decrypt ciphertexts                       | Small polynomial in $R = \mathbb{Z}[x]/(x^N + 1)$ used in $m = c_0 + c_1 \cdot sk$.    |
 | **Public Key** ($pk$)           | Encrypt data                              | Pair $(b, a)$ where $b = -a \cdot sk + e \ (\text{mod}\ q)$.                           |
 | **Relinearization Key** ($rlk$) | Compress ciphertexts after multiplication | Encodes $sk^2$ in a decomposed form: $rlk = (-a' \cdot sk + T \cdot sk^2 + e', \ a')$. |
 | **Galois Key** ($gk$)           | Rotate slots or permute data              | Encodes automorphisms of $sk$ (e.g. rotations, row/column swaps).                      |
